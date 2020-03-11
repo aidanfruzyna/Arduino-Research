@@ -1,12 +1,25 @@
 int forward = 10;
 int reverse = 9;
 int button = 3;
+int buzzer = 4;
 
 void setup() {
   Serial.begin(9600);
   pinMode(forward,OUTPUT);
   pinMode(reverse,OUTPUT);
   pinMode(button,INPUT);
+  pinMode(buzzer,OUTPUT);
+}
+
+void buzz(int targetPin, long frequency, long length){
+  long delayValue = 1000000/frequency/2;
+  long numCycles = frequency * length/1000;
+  for (long i=0; i < numCycles; i++){
+    digitalWrite(targetPin, HIGH);
+    delayMicroseconds(delayValue);
+    digitalWrite(targetPin, LOW);
+    delayMicroseconds(delayValue);
+  }
 }
 
 void setMotor(char select, char direct, int power)//Select: R/L, Direct: +/-, Speed: 0-63
@@ -27,22 +40,27 @@ void setMotor(char select, char direct, int power)//Select: R/L, Direct: +/-, Sp
   }
 //Apply speed based on direction 
   if(direct == '+'){
-    digitalWrite(forward,HIGH);
-    digitalWrite(reverse,LOW);
     pack += power;}
   else if(direct == '-'){
-    digitalWrite(reverse,HIGH);
-    digitalWrite(forward,LOW);
     pack -= power;}
   else{
     Serial.println("Error selecting direction");
     }
-    if(power==0){
+//Send serial to motor controller
+  Serial.write(pack);
+//Display direction
+  if(direct == '-'){
+    digitalWrite(reverse,HIGH);
+    digitalWrite(forward,LOW);
+    buzz(buzzer,2500,500);}
+  else if(direct == '+'){
+    digitalWrite(forward,HIGH);
+    digitalWrite(reverse,LOW);
+  }
+  if(power==0){
       digitalWrite(forward,LOW);
       digitalWrite(reverse,LOW);
     }
-//Send serial to motor controller
-  Serial.write(pack);
 }
 
 void stopMotors(){
